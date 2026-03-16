@@ -29,7 +29,7 @@ class MeetingSegmenter:
         self.vis_dir = self.output_dir / "visualizations"
         self.vis_dir.mkdir(parents=True, exist_ok=True)
 
-        self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name, device_map="auto", torch_dtype="auto")
         self.model.eval()
@@ -89,18 +89,54 @@ class MeetingSegmenter:
         segments.append(sentences[start:])
         return segments, similarities, threshold, change_points
 
-    def merge_small_segments(self, segments, min_len=5):
-        merged, buf = [], []
+    def segment_embedding(self, embs):
+        return np.mean(embs, axis=0, keepdims=True)
+
+    def merge_small_segments(self, segments, embeddings, min_len=5):
+        seg_ranges = []
+        idx = 0
         for seg in segments:
-            if len(seg) <= min_len:
-                buf.extend(seg)
+            seg_ranges.append((idx, idx + len(seg)))
+            idx += len(seg)
+
+        merged = [seg.copy() for seg in segments]
+        ranges = seg_ranges.copy()
+
+        i = 0
+        while i < len(merged):
+            if len(merged[i]) > min_len:
+                i += 1
+                continue
+
+            cur_s, cur_e = ranges[i]
+            cur_emb = self.segment_embedding(embeddings[cur_s:cur_e])
+
+            sim_prev, sim_next = -1, -1
+
+            if i > 0:
+                ps, pe = ranges[i - 1]
+                prev_emb = self.segment_embedding(embeddings[ps:pe])
+                sim_prev = cosine_similarity(cur_emb, prev_emb)[0][0]
+
+            if i < len(merged) - 1:
+                ns, ne = ranges[i + 1]
+                next_emb = self.segment_embedding(embeddings[ns:ne])
+                sim_next = cosine_similarity(cur_emb, next_emb)[0][0]
+
+            if sim_prev >= sim_next and i > 0:
+                merged[i - 1].extend(merged[i])
+                ranges[i - 1] = (ranges[i - 1][0], ranges[i][1])
+                del merged[i]
+                del ranges[i]
+                i -= 1
+            elif i < len(merged) - 1:
+                merged[i].extend(merged[i + 1])
+                ranges[i] = (ranges[i][0], ranges[i + 1][1])
+                del merged[i + 1]
+                del ranges[i + 1]
             else:
-                if buf:
-                    merged.append(buf)
-                    buf = []
-                merged.append(seg)
-        if buf:
-            merged.append(buf)
+                i += 1
+
         return merged
 
     def visualize(self, embeddings, similarities, threshold, change_points, save_prefix):
@@ -121,17 +157,28 @@ class MeetingSegmenter:
         for file in tqdm(sorted(self.input_dir.glob("*.json"))):
             with open(file, "r", encoding="utf-8") as f:
                 data = json.load(f)
+
             sentences = [u["sentence"] for u in data["dialogue"]]
             embeddings = self.get_embeddings(sentences)
+
             segments, sims, th, cps = self.segment_sentences(sentences, embeddings)
-            merged = self.merge_small_segments(segments)
+
+            merged = self.merge_small_segments(segments, embeddings, min_len=5)
+
             merged_cp, idx = [], 0
             for seg in merged[:-1]:
                 idx += len(seg)
                 merged_cp.append(idx)
+
             out_path = self.output_dir / f"{file.stem}_segments.json"
-            json.dump({"segments": [{"id": i, "sentences": seg} for i, seg in enumerate(merged)]},
-                      open(out_path, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+            json.dump(
+                {"segments": [{"id": i, "sentences": seg} for i, seg in enumerate(merged)]},
+                open(out_path, "w", encoding="utf-8"),
+                ensure_ascii=False,
+                indent=2
+            )
+
             vis_prefix = str(self.vis_dir / f"{file.stem}_analysis")
             self.visualize(embeddings, sims, th, merged_cp, vis_prefix)
+
             print(f"✅ {file.name} 처리 완료")

@@ -11,7 +11,7 @@ class SegmentRetriever:
     def __init__(self, model_name, seg_dir, orig_dir, output_dir, top_k=10):
         self.seg_dir, self.orig_dir, self.output_dir = Path(seg_dir), Path(orig_dir), Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name, device_map="auto", torch_dtype="auto")
         self.model.eval()

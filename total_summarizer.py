@@ -30,9 +30,25 @@ class TotalTopicSummarizer:
                 continue
 
             prompt = f"""
-    당신은 회의 전체 내용을 요약하는 전문가입니다.
-    아래의 sub-topic 요약문들을 참고하여 '{total_topic}'에 대한 전체 요약을 4문장 내외로 작성하세요.
-    {combined}
+You are an expert in generating a final meeting summary based on sub-topic-level summaries under a total_topic.
+Below are meeting summaries, each related to the total_topic.
+Your task is to generate a final summary related to the total_topic, using the sub_topic_summaries as reference.
+
+- total_topic:
+"{total_topic}"
+
+- sub_topic_summaries:
+{combined}
+    
+- Guidelines:
+    - Integrate the content **naturally without redundancy**.
+    - Write in a concise and clear style, similar to news articles.
+    - Write **a single structurally organized summary** that reflects the overall topic.
+    - The summary should be around 5~6 sentences.
+
+✳️ Output Format:
+    - Output only the final summary. Do not include any additional explanation or titles.
+    - Write in Korean.
 """
             response = openai.chat.completions.create(
                 model=self.model,

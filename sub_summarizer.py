@@ -16,13 +16,25 @@ class SubTopicSummarizer:
     def generate_summary(self, topic, sentences):
         text = " ".join(sentences)
         prompt = f"""
-    당신은 회의 요약 전문가입니다.
-    주제: {topic}
-    문장들:
+    You are an expert in writing summaries of meeting transcripts.
+
+    Below, you are given a meeting topic and a set of sentences collected from meeting utterances related to that topic.
+    Your task is to write a meeting summary based on the sentences, focusing on the given topic.
+
+    Topic:
+    {topic}
+    
+    Instructions:
+        1. Write in a concise and clear style, similar to news articles.
+        2. The summary should be around 4 sentences.
+        3. Only output the summary.
+        4. Write in Korean.
+
+    Sentences:
     {text}
 
-    이 주제에 대한 요약을 명확하고 간결하게 4문장 내외로 작성하세요.
-"""
+    Summary:
+    """
         response = openai.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
