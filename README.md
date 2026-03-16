@@ -1,8 +1,9 @@
 # Dynamic-Segmentation-Sum
 
-pipeline.py 파일을 실행시키면 document segmentation -> find relate segment -> sub topic sum -> total topic sum 이 순차적으로 수행
+pipeline.py 파일을 실행시키면 document segmentation -> find relate segment -> sub topic sum -> total topic sum 순차적으로 수행
 
-pipeline.py 파일을 실행시켰을 때 나오는 output은 test_ouput에 미리 저장해 둠
+## install
+pip install -r requirements.txt
 
 경로 지정
 
