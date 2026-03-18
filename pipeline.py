@@ -7,7 +7,7 @@ from total_summarizer import TotalTopicSummarizer
 class MeetingSummarizationPipeline:
     def __init__(self, model_name, openai_model, base_dir):
         self.paths = {
-            "original": "/home/kilab_ndw/etri_sum/NEW_BORN_embed/ko/qwen/Dynamic-Segmentation-Sum/test_dataset", # 회의록(팀벨) 데이터셋 경로
+            "original": f"{base_dir}/test_dataset", # 회의록(팀벨) 데이터셋 경로
             "seg": f"{base_dir}/get_seg_merge",
             "related": f"{base_dir}/get_related_seg_win_10",
             "sub": f"{base_dir}/gen_sub_win_10",
@@ -33,7 +33,7 @@ class MeetingSummarizationPipeline:
 
 
 if __name__ == "__main__":
-    base_dir = "/home/kilab_ndw/etri_sum/NEW_BORN_embed/ko/qwen/Dynamic-Segmentation-Sum" # base 디렉 경로
+    base_dir = "../Dynamic-Segmentation-Sum" # base 디렉 경로
     pipeline = MeetingSummarizationPipeline(
         model_name="Qwen/Qwen3-Embedding-8B",
         openai_model="gpt-4o-mini",
