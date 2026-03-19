@@ -7,3 +7,5 @@ tqdm
 accelerate
 openai
 dotenv
+konlpy
+rouge
