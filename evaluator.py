@@ -25,6 +25,10 @@ class SummaryEvaluator:
 
     def morph(self, text):
         return " ".join(self.komoran.morphs(text))
+    
+    # def morph(self, text):
+        # return text  # 형태소 분석 제거
+
 
     def run(self):
         results = []
