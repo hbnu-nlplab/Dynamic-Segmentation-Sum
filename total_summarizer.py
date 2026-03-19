@@ -30,9 +30,9 @@ class TotalTopicSummarizer:
                 continue
 
             prompt = f"""
-You are an expert in generating a final meeting summary based on sub-topic-level summaries under a total_topic.
-Below are meeting summaries, each related to the total_topic.
-Your task is to generate a final summary related to the total_topic, using the sub_topic_summaries as reference.
+You are an expert in generating a final meeting summary based on sub-topic-level summaries.
+
+Your task is to write a single, coherent summary focusing on the total topic.
 
 - total_topic:
 "{total_topic}"
@@ -40,15 +40,13 @@ Your task is to generate a final summary related to the total_topic, using the s
 - sub_topic_summaries:
 {combined}
     
-- Guidelines:
-    - Integrate the content **naturally without redundancy**.
-    - Write in a concise and clear style, similar to news articles.
-    - Write **a single structurally organized summary** that reflects the overall topic.
-    - The summary should be around 5~6 sentences.
-
-✳️ Output Format:
-    - Output only the final summary. Do not include any additional explanation or titles.
-    - Write in Korean.
+Guidelines:
+- Integrate the content naturally without redundancy.
+- Write in a concise, news-style tone.
+- Write around 5~6 sentences.
+- Do NOT list sub-topics explicitly.
+- Output only the summary.
+- Write in Korean.
 """
             response = openai.chat.completions.create(
                 model=self.model,
